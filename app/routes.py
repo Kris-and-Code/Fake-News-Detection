@@ -23,10 +23,17 @@ def analyze_news():
         # Analyze text
         text_score = text_analyzer.analyze(text_content)
         
-        # Analyze images if provided
+        # Analyze images if provided (resilient per URL)
         image_scores = []
         if image_urls:
-            image_scores = [image_analyzer.analyze(url) for url in image_urls]
+            for url in image_urls:
+                try:
+                    score = image_analyzer.analyze(url)
+                except Exception as img_err:
+                    # On error, append neutral score to avoid failing the whole request
+                    print(f"Image analysis failed for {url}: {img_err}")
+                    score = 0.5
+                image_scores.append(score)
         
         # Combine results
         final_score = multimodal_analyzer.combine_scores(text_score, image_scores)
